@@ -28,7 +28,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         int curNode = 0;
         nodeList.get(0).cntDown++;
         for (char curChar : element.toCharArray()) {
-            int nextNodeIndex = curChar - 'a';
+            int nextNodeIndex = curChar - 'A';
             int nextNode = nodeList.get(curNode).next[nextNodeIndex];
             if (nextNode == 0) {
                 nextNode = nodeList.size();
@@ -46,7 +46,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     private Node findNode(String element) {
         int curNode = 0;
         for (char curChar : element.toCharArray()) {
-            curNode = nodeList.get(curNode).next[curChar - 'a'];
+            curNode = nodeList.get(curNode).next[curChar - 'A'];
             if (curNode == 0 || nodeList.get(curNode).cntDown == 0) {
                 return null;
             }
@@ -66,7 +66,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         int curNode = 0;
         nodeList.get(0).cntDown--;
         for (char curChar : element.toCharArray()) {
-            curNode = nodeList.get(curNode).next[curChar - 'a'];
+            curNode = nodeList.get(curNode).next[curChar - 'A'];
             nodeList.get(curNode).cntDown--;
         }
         size--;
