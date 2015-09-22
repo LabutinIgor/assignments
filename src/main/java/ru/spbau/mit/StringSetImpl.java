@@ -3,6 +3,7 @@ package ru.spbau.mit;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class StringSetImpl implements StringSet, StreamSerializable {
@@ -82,15 +83,27 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         return a.get(v).cnt_down;
     }
 
+    private static void writeInt(OutputStream out, int n) throws IOException{
+        out.write(ByteBuffer.allocate(4).putInt(n).array());
+    }
+
+    private static int readInt(InputStream in) throws IOException{
+        byte[] b = new byte[4];
+        int cnt = in.read(b, 0, 4);
+        if (cnt != 4)
+            throw new IOException();
+        return ByteBuffer.wrap(b).getInt();
+    }
+
     public void serialize(OutputStream out) throws SerializationException {
         try {
-            out.write(size);
-            out.write(a.size());
+            writeInt(out, size);
+            writeInt(out, a.size());
             for (Node el : a) {
-                out.write(el.cnt_down);
-                out.write(el.is_terminal ? 1 : 0);
+                writeInt(out, el.cnt_down);
+                writeInt(out, el.is_terminal ? 1 : 0);
                 for (int j = 0; j < 128; j++) {
-                    out.write(el.next[j]);
+                    writeInt(out, el.next[j]);
                 }
             }
             out.close();
@@ -101,14 +114,15 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     public void deserialize(InputStream in) throws SerializationException {
         try {
-            size = in.read();
-            int n = in.read();
+            a.clear();
+            size = readInt(in);
+            int n = readInt(in);
             for (int i = 0; i < n; i++) {
                 a.add(new Node());
-                a.get(i).cnt_down = in.read();
-                a.get(i).is_terminal = in.read() == 1;
+                a.get(i).cnt_down = readInt(in);
+                a.get(i).is_terminal = readInt(in) == 1;
                 for (int j = 0; j < 128; j++) {
-                    a.get(i).next[j] = in.read();
+                    a.get(i).next[j] = readInt(in);
                 }
             }
             in.close();
