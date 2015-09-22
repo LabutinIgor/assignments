@@ -14,45 +14,44 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         public boolean isTerminal = false;
     }
 
-    private List<Node> a = new ArrayList<>();
+    private List<Node> nodeList = new ArrayList<>();
     private int size = 0;
 
     public StringSetImpl() {
-        a.add(new Node());
+        nodeList.add(new Node());
     }
 
     public boolean add(String element) {
         if (contains(element))
             return false;
 
-        int v = 0;
-        a.get(0).cntDown++;
-        for (char c : element.toCharArray()) {
-            int k = c - 'A';
-            int u = a.get(v).next[k];
-            if (u == 0) {
-                u = a.size();
-                a.get(v).next[k] = u;
-                a.add(new Node());
+        int curNode = 0;
+        nodeList.get(0).cntDown++;
+        for (char curChar : element.toCharArray()) {
+            int nextNodeIndex = curChar - 'a';
+            int nextNode = nodeList.get(curNode).next[nextNodeIndex];
+            if (nextNode == 0) {
+                nextNode = nodeList.size();
+                nodeList.get(curNode).next[nextNodeIndex] = nextNode;
+                nodeList.add(new Node());
             }
-            a.get(u).cntDown++;
-            v = u;
+            nodeList.get(nextNode).cntDown++;
+            curNode = nextNode;
         }
         size++;
-        a.get(v).isTerminal = true;
+        nodeList.get(curNode).isTerminal = true;
         return true;
     }
 
     private Node findNode(String element) {
-        int v = 0;
-        for (char c : element.toCharArray()) {
-            int k = c - 'A';
-            v = a.get(v).next[k];
-            if (v == 0 || a.get(v).cntDown == 0) {
+        int curNode = 0;
+        for (char curChar : element.toCharArray()) {
+            curNode = nodeList.get(curNode).next[curChar - 'a'];
+            if (curNode == 0 || nodeList.get(curNode).cntDown == 0) {
                 return null;
             }
         }
-        return a.get(v);
+        return nodeList.get(curNode);
     }
 
     public boolean contains(String element) {
@@ -64,14 +63,14 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         if (!contains(element))
             return false;
 
-        int v = 0;
-        a.get(0).cntDown--;
-        for (char c : element.toCharArray()) {
-            v = a.get(v).next[c - 'A'];
-            a.get(v).cntDown--;
+        int curNode = 0;
+        nodeList.get(0).cntDown--;
+        for (char curChar : element.toCharArray()) {
+            curNode = nodeList.get(curNode).next[curChar - 'a'];
+            nodeList.get(curNode).cntDown--;
         }
         size--;
-        a.get(v).isTerminal = false;
+        nodeList.get(curNode).isTerminal = false;
         return true;
     }
 
@@ -89,18 +88,18 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     private static int readInt(InputStream in) throws IOException {
-        byte[] b = new byte[4];
-        int cnt = in.read(b, 0, 4);
+        byte[] bytes = new byte[4];
+        int cnt = in.read(bytes, 0, 4);
         if (cnt != 4)
             throw new IOException();
-        return ByteBuffer.wrap(b).getInt();
+        return ByteBuffer.wrap(bytes).getInt();
     }
 
     public void serialize(OutputStream out) throws SerializationException {
         try {
             writeInt(out, size);
-            writeInt(out, a.size());
-            for (Node el : a) {
+            writeInt(out, nodeList.size());
+            for (Node el : nodeList) {
                 writeInt(out, el.cntDown);
                 writeInt(out, el.isTerminal ? 1 : 0);
                 for (int j = 0; j < 128; j++) {
@@ -114,15 +113,15 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     public void deserialize(InputStream in) throws SerializationException {
         try {
-            a.clear();
+            nodeList.clear();
             size = readInt(in);
-            int n = readInt(in);
-            for (int i = 0; i < n; i++) {
-                a.add(new Node());
-                a.get(i).cntDown = readInt(in);
-                a.get(i).isTerminal = readInt(in) == 1;
+            int cntNodes = readInt(in);
+            for (int i = 0; i < cntNodes; i++) {
+                nodeList.add(new Node());
+                nodeList.get(i).cntDown = readInt(in);
+                nodeList.get(i).isTerminal = readInt(in) == 1;
                 for (int j = 0; j < 128; j++) {
-                    a.get(i).next[j] = readInt(in);
+                    nodeList.get(i).next[j] = readInt(in);
                 }
             }
         } catch (IOException e) {
