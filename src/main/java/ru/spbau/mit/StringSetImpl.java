@@ -5,17 +5,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StringSetImpl implements StringSet, StreamSerializable {
-    private class Node {
-        int next[] = new int[128];
-        int cnt_down = 0;
-        boolean is_terminal = false;
+    private static class Node {
+        public int next[] = new int[128];
+        public int cntDown = 0;
+        public boolean isTerminal = false;
     }
-    private ArrayList<Node> a = new ArrayList<>();
+
+    private List<Node> a = new ArrayList<>();
     private int size = 0;
 
-    StringSetImpl() {
+    public StringSetImpl() {
         a.add(new Node());
     }
 
@@ -24,32 +26,38 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             return false;
 
         int v = 0;
-        a.get(0).cnt_down++;
-        for (int i = 0; i < element.length(); i++) {
-            int u = a.get(v).next[element.charAt(i) - 'A'];
+        a.get(0).cntDown++;
+        for (char c : element.toCharArray()) {
+            int k = c - 'A';
+            int u = a.get(v).next[k];
             if (u == 0) {
                 u = a.size();
-                a.get(v).next[element.charAt(i) - 'A'] = u;
+                a.get(v).next[k] = u;
                 a.add(new Node());
             }
-            a.get(u).cnt_down++;
+            a.get(u).cntDown++;
             v = u;
         }
         size++;
-        a.get(v).is_terminal = true;
+        a.get(v).isTerminal = true;
         return true;
     }
 
-    public boolean contains(String element) {
+    private Node findNode(String element) {
         int v = 0;
-        for (int i = 0; i < element.length(); i++) {
-            int c = element.charAt(i) - 'A';
-            v = a.get(v).next[c];
-            if (v == 0 || a.get(v).cnt_down == 0) {
-                return false;
+        for (char c : element.toCharArray()) {
+            int k = c - 'A';
+            v = a.get(v).next[k];
+            if (v == 0 || a.get(v).cntDown == 0) {
+                return null;
             }
         }
-        return a.get(v).is_terminal;
+        return a.get(v);
+    }
+
+    public boolean contains(String element) {
+        Node el = findNode(element);
+        return el != null && el.isTerminal;
     }
 
     public boolean remove(String element) {
@@ -57,13 +65,13 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             return false;
 
         int v = 0;
-        a.get(0).cnt_down--;
-        for (int i = 0; i < element.length(); i++) {
-            v = a.get(v).next[element.charAt(i) - 'A'];
-            a.get(v).cnt_down--;
+        a.get(0).cntDown--;
+        for (char c : element.toCharArray()) {
+            v = a.get(v).next[c - 'A'];
+            a.get(v).cntDown--;
         }
         size--;
-        a.get(v).is_terminal = false;
+        a.get(v).isTerminal = false;
         return true;
     }
 
@@ -72,22 +80,15 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public int howManyStartsWithPrefix(String prefix) {
-        int v = 0;
-        for (int i = 0; i < prefix.length(); i++) {
-            int c = prefix.charAt(i) - 'A';
-            v = a.get(v).next[c];
-            if (v == 0 || a.get(v).cnt_down == 0) {
-                return 0;
-            }
-        }
-        return a.get(v).cnt_down;
+        Node el = findNode(prefix);
+        return el == null ? 0 : el.cntDown;
     }
 
-    private static void writeInt(OutputStream out, int n) throws IOException{
+    private static void writeInt(OutputStream out, int n) throws IOException {
         out.write(ByteBuffer.allocate(4).putInt(n).array());
     }
 
-    private static int readInt(InputStream in) throws IOException{
+    private static int readInt(InputStream in) throws IOException {
         byte[] b = new byte[4];
         int cnt = in.read(b, 0, 4);
         if (cnt != 4)
@@ -100,13 +101,12 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             writeInt(out, size);
             writeInt(out, a.size());
             for (Node el : a) {
-                writeInt(out, el.cnt_down);
-                writeInt(out, el.is_terminal ? 1 : 0);
+                writeInt(out, el.cntDown);
+                writeInt(out, el.isTerminal ? 1 : 0);
                 for (int j = 0; j < 128; j++) {
                     writeInt(out, el.next[j]);
                 }
             }
-            out.close();
         } catch (IOException e) {
             throw new SerializationException();
         }
@@ -119,13 +119,12 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             int n = readInt(in);
             for (int i = 0; i < n; i++) {
                 a.add(new Node());
-                a.get(i).cnt_down = readInt(in);
-                a.get(i).is_terminal = readInt(in) == 1;
+                a.get(i).cntDown = readInt(in);
+                a.get(i).isTerminal = readInt(in) == 1;
                 for (int j = 0; j < 128; j++) {
                     a.get(i).next[j] = readInt(in);
                 }
             }
-            in.close();
         } catch (IOException e) {
             throw new SerializationException();
         }
