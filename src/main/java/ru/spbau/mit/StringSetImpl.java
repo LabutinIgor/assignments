@@ -9,6 +9,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     private class Node {
         int next[] = new int[128];
         int cnt_down = 0;
+        boolean is_terminal = false;
     }
     private ArrayList<Node> a = new ArrayList<>();
     private int size = 0;
@@ -34,6 +35,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             v = u;
         }
         size++;
+        a.get(v).is_terminal = true;
         return true;
     }
 
@@ -46,7 +48,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
                 return false;
             }
         }
-        return true;
+        return a.get(v).is_terminal;
     }
 
     public boolean remove(String element) {
@@ -60,6 +62,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             a.get(v).cnt_down--;
         }
         size--;
+        a.get(v).is_terminal = false;
         return true;
     }
 
@@ -85,6 +88,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             out.write(a.size());
             for (Node el : a) {
                 out.write(el.cnt_down);
+                out.write(el.is_terminal ? 1 : 0);
                 for (int j = 0; j < 128; j++) {
                     out.write(el.next[j]);
                 }
@@ -102,6 +106,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             for (int i = 0; i < n; i++) {
                 a.add(new Node());
                 a.get(i).cnt_down = in.read();
+                a.get(i).is_terminal = in.read() == 1;
                 for (int j = 0; j < 128; j++) {
                     a.get(i).next[j] = in.read();
                 }
