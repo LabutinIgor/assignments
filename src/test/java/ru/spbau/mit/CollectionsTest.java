@@ -94,8 +94,13 @@ public class CollectionsTest {
         List<Integer> list = new ArrayList<>();
         for (int i = 0; i < 10; i++)
             list.add(i);
-
         assertEquals(Collections.foldl(addToString, "", list), "0123456789");
+
+        List<Integer> list2 = new ArrayList<>();
+        for (int i = 0; i < 5; i++)
+            list2.add(i);
+
+        assertEquals(Collections.foldl(substract, 0, list2), Integer.valueOf(-10));
     }
 
     @Test
