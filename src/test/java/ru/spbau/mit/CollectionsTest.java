@@ -84,8 +84,8 @@ public class CollectionsTest {
         Iterable<Integer> res2 = Collections.takeUnless(isOdd, list);
         assertEquals(res, res2);
         Iterator<Integer> it = res.iterator();
-        assertTrue(it.next() == 2);
-        assertTrue(it.next() == 0);
+        assertEquals(it.next(), Integer.valueOf(2));
+        assertEquals(it.next(), Integer.valueOf(0));
         assertFalse(it.hasNext());
     }
 

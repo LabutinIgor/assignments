@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class PredicateTest {
     private static Predicate<Integer> isZero =
@@ -14,11 +15,14 @@ public class PredicateTest {
                 }
             };
 
-    private static Predicate<Integer> divide =
+    private static Predicate<Integer> failIfZero =
             new Predicate<Integer>() {
                 @Override
                 public Boolean apply(Integer num) {
-                    return 100 / num > 0;
+                    if (num == 0) {
+                        fail();
+                    }
+                    return true;
                 }
             };
     @Test
@@ -30,7 +34,7 @@ public class PredicateTest {
 
     @Test
     public void testLazyOperations() {
-        assertTrue(Predicate.ALWAYS_TRUE.or(divide).apply(0));
-        assertFalse(Predicate.ALWAYS_FALSE.and(divide).apply(0));
+        assertTrue(Predicate.ALWAYS_TRUE.or(failIfZero).apply(0));
+        assertFalse(Predicate.ALWAYS_FALSE.and(failIfZero).apply(0));
     }
 }
