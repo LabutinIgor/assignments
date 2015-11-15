@@ -60,7 +60,6 @@ public class GameServerImpl implements GameServer {
 
     @Override
     public void broadcast(String message) {
-        System.err.println("broadcast " + message);
         synchronized (connections) {
             for (Connection connection : connections.values()) {
                 connection.send(message);
@@ -70,7 +69,6 @@ public class GameServerImpl implements GameServer {
 
     @Override
     public void sendTo(String id, String message) {
-        System.err.println("sendTo " + id + " " + message);
         synchronized (connections) {
             connections.get(id).send(message);
         }

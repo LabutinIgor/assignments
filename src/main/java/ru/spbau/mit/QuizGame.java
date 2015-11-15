@@ -88,14 +88,12 @@ public class QuizGame implements Game {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                System.err.println("OK");
                 if (openedLetters == maxLettersToOpen) {
                     server.broadcast("Nobody guessed, the word was " + answers.get(currentQuestion));
                     currentQuestion = (currentQuestion + 1) % questions.size();
                     startNewRound();
                 } else {
                     openedLetters++;
-                    System.err.println(openedLetters);
                     server.broadcast("Current prefix is " + answers.get(currentQuestion).substring(0, openedLetters));
                 }
             }
