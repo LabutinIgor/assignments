@@ -1,28 +1,26 @@
 package ru.spbau.mit;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 
 public class GameServerImpl implements GameServer {
-    private Game plugin;
+    private final Game plugin;
     private int lastId = 0;
-    private Map<String, Connection> connections = new HashMap<>();
-    public GameServerImpl(String gameClassName, Properties properties) {
-        try {
-            this.plugin = (Game) Class.forName(gameClassName).getConstructor(GameServer.class).newInstance(this);
-            for (String key : properties.stringPropertyNames()) {
-                String value = properties.getProperty(key);
-                if (value.matches("-?[0-9]+")) {
-                    this.plugin.getClass().getMethod("set" + key.toUpperCase().charAt(0) + key.substring(1), Integer.class).
-                            invoke(this.plugin, Integer.valueOf(value));
-                } else {
-                    this.plugin.getClass().getMethod("set" + key.toUpperCase().charAt(0) + key.substring(1), String.class).
-                            invoke(this.plugin, value);
-                }
+    private final Map<String, Connection> connections = new HashMap<>();
+    public GameServerImpl(String gameClassName, Properties properties) throws ClassNotFoundException, NoSuchMethodException,
+            IllegalAccessException, InvocationTargetException, InstantiationException {
+        this.plugin = (Game) Class.forName(gameClassName).getConstructor(GameServer.class).newInstance(this);
+        for (String key : properties.stringPropertyNames()) {
+            String value = properties.getProperty(key);
+            String methodName = "set" + key.toUpperCase().charAt(0) + key.substring(1);
+            if (value.matches("-?[0-9]+")) {
+                this.plugin.getClass().getMethod(methodName, Integer.class).
+                        invoke(this.plugin, Integer.valueOf(value));
+            } else {
+                this.plugin.getClass().getMethod(methodName, String.class).
+                        invoke(this.plugin, value);
             }
-        } catch (Exception e) {
-            System.err.println("Wrong plugin");
-            System.exit(1);
         }
     }
 
@@ -40,7 +38,7 @@ public class GameServerImpl implements GameServer {
                 while (!connection.isClosed()) {
                     try {
                         if (!connection.isClosed()) {
-                            String message = connection.receive(0);
+                            String message = connection.receive(1);
                             if (message != null) {
                                 plugin.onPlayerSentMsg(id, message);
                             }

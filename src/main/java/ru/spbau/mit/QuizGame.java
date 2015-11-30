@@ -5,19 +5,18 @@ import java.util.*;
 
 
 public class QuizGame implements Game {
-    private GameServer server;
+    private final GameServer server;
     private int maxLettersToOpen;
     private Integer openedLetters = 0;
     private long delayUntilNextLetter;
-    private List<String> questions = new ArrayList<>();
-    private List<String> answers = new ArrayList<>();
+    private final List<String> questions = new ArrayList<>();
+    private final List<String> answers = new ArrayList<>();
     private int currentQuestion = 0;
     private boolean isRunning = false;
-    Timer currentTimer = null;
+    private Timer currentTimer = null;
 
     public QuizGame(GameServer server) {
         this.server = server;
-
     }
 
     public void setDelayUntilNextLetter(Integer delayUntilNextLetter) {
@@ -28,8 +27,7 @@ public class QuizGame implements Game {
         this.maxLettersToOpen = maxLettersToOpen;
     }
 
-    public void setDictionaryFilename(String dictionaryFilename) {
-        try {
+    public void setDictionaryFilename(String dictionaryFilename) throws FileNotFoundException {
             Scanner in = new Scanner(new File(dictionaryFilename));
             while (in.hasNextLine()) {
                 String[] parts = in.nextLine().split(";");
@@ -37,10 +35,6 @@ public class QuizGame implements Game {
                 answers.add(parts[1]);
             }
             in.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("Dictionary file not found");
-            System.exit(1);
-        }
     }
 
     @Override
@@ -59,10 +53,7 @@ public class QuizGame implements Game {
                 isRunning = false;
                 currentQuestion = (currentQuestion + 1) % questions.size();
                 server.broadcast("Game has been stopped by " + id);
-                if (currentTimer != null) {
-                    currentTimer.cancel();
-                    currentTimer = null;
-                }
+                cancelCurrentTimer();
                 break;
             default:
                 if (isRunning) {
@@ -82,9 +73,7 @@ public class QuizGame implements Game {
         openedLetters = 0;
         server.broadcast("New round started: " + questions.get(currentQuestion) + " (" +
                 String.valueOf(answers.get(currentQuestion).length()) + " letters)");
-        if (currentTimer != null) {
-            currentTimer.cancel();
-        }
+        cancelCurrentTimer();
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
@@ -100,5 +89,12 @@ public class QuizGame implements Game {
         };
         currentTimer = new Timer();
         currentTimer.schedule(task, delayUntilNextLetter, delayUntilNextLetter);
+    }
+
+    private void cancelCurrentTimer() {
+        if (currentTimer != null) {
+            currentTimer.cancel();
+            currentTimer = null;
+        }
     }
 }

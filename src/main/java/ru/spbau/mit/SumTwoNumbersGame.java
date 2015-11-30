@@ -4,12 +4,11 @@ import java.util.Random;
 
 public class SumTwoNumbersGame implements Game {
     private int first, second;
-    private GameServer server;
+    private final GameServer server;
+    private final Random random = new Random();
 
     public SumTwoNumbersGame(GameServer server) {
-        Random random = new Random();
-        first = random.nextInt(1000);
-        second = random.nextInt(1000);
+        genRandomNumbers();
         this.server = server;
     }
 
@@ -24,13 +23,16 @@ public class SumTwoNumbersGame implements Game {
             if (Integer.valueOf(msg) == first + second) {
                 server.sendTo(id, "Right");
                 server.broadcast(id + " won");
-                Random random = new Random();
-                first = random.nextInt(1000);
-                second = random.nextInt(1000);
+                genRandomNumbers();
                 server.broadcast(String.valueOf(first) + " " + String.valueOf(second));
             } else {
                 server.sendTo(id, "Wrong");
             }
         }
+    }
+
+    private void genRandomNumbers() {
+        first = random.nextInt(1000);
+        second = random.nextInt(1000);
     }
 }
