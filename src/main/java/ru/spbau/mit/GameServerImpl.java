@@ -37,13 +37,15 @@ public class GameServerImpl implements GameServer {
                 plugin.onPlayerConnected(id);
                 while (!connection.isClosed()) {
                     try {
-                        if (!connection.isClosed()) {
-                            String message = connection.receive(1);
-                            if (message != null) {
-                                plugin.onPlayerSentMsg(id, message);
+                        synchronized (connection) {
+                            if (!connection.isClosed()) {
+                                String message = connection.receive(100);
+                                if (message != null) {
+                                    plugin.onPlayerSentMsg(id, message);
+                                }
                             }
                         }
-                    } catch (InterruptedException e) {
+                    } catch(InterruptedException e){
                         break;
                     }
                 }

@@ -91,7 +91,7 @@ public class QuizGame implements Game {
         currentTimer.schedule(task, delayUntilNextLetter, delayUntilNextLetter);
     }
 
-    private void cancelCurrentTimer() {
+    private synchronized void cancelCurrentTimer() {
         if (currentTimer != null) {
             currentTimer.cancel();
             currentTimer = null;
