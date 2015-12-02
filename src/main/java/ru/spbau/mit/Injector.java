@@ -1,6 +1,7 @@
 package ru.spbau.mit;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,33 +32,37 @@ public class Injector {
     }
 
     private static Object makeObjectOfClass(Class rootClass) throws Exception {
-        Constructor resultClassConstructor = rootClass.getConstructors()[0];
-        Class<?>[] parametersClasses = resultClassConstructor.getParameterTypes();
-        List<Object> arguments = new ArrayList<>();
+        try {
+            Constructor resultClassConstructor = rootClass.getConstructors()[0];
+            Class<?>[] parametersClasses = resultClassConstructor.getParameterTypes();
+            List<Object> arguments = new ArrayList<>();
 
-        for (Class<?> parameterClass : parametersClasses) {
-            boolean argumentAdded = false;
-            for (int i = 0; i < constructedClasses.length; i++) {
-                if (parameterClass.isAssignableFrom(constructedClasses[i])) {
-                    if (argumentAdded) {
-                        throw new AmbiguousImplementationException();
-                    }
-                    if (constructedObjects[i] == null) {
-                        if (startedToCreate[i]) {
-                            throw new InjectionCycleException();
+            for (Class<?> parameterClass : parametersClasses) {
+                boolean argumentAdded = false;
+                for (int i = 0; i < constructedClasses.length; i++) {
+                    if (parameterClass.isAssignableFrom(constructedClasses[i])) {
+                        if (argumentAdded) {
+                            throw new AmbiguousImplementationException();
                         }
-                        startedToCreate[i] = true;
-                        constructedObjects[i] = makeObjectOfClass(constructedClasses[i]);
+                        if (constructedObjects[i] == null) {
+                            if (startedToCreate[i]) {
+                                throw new InjectionCycleException();
+                            }
+                            startedToCreate[i] = true;
+                            constructedObjects[i] = makeObjectOfClass(constructedClasses[i]);
+                        }
+                        arguments.add(constructedObjects[i]);
+                        argumentAdded = true;
                     }
-                    arguments.add(constructedObjects[i]);
-                    argumentAdded = true;
+                }
+                if (!argumentAdded) {
+                    throw new ImplementationNotFoundException();
                 }
             }
-            if (!argumentAdded) {
-                throw new ImplementationNotFoundException();
-            }
-        }
 
-        return resultClassConstructor.newInstance(arguments.toArray());
+            return resultClassConstructor.newInstance(arguments.toArray());
+        } catch (InvocationTargetException ignored) {
+            throw new AmbiguousImplementationException();
+        }
     }
 }
