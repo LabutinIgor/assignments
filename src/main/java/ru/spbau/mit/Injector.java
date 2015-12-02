@@ -17,16 +17,16 @@ public class Injector {
 
     public static Object initialize(String rootClassName, List<String> implementationClassNames) throws Exception {
         Class resultClass = Class.forName(rootClassName);
-        constructedObjects = new Object[implementationClassNames.size()];
-        constructedClasses = new Class[implementationClassNames.size()];
-        startedToCreate = new boolean[implementationClassNames.size()];
+        constructedObjects = new Object[implementationClassNames.size() + 1];
+        constructedClasses = new Class[implementationClassNames.size() + 1];
+        startedToCreate = new boolean[implementationClassNames.size() + 1];
 
+        constructedClasses[0] = resultClass;
         for (int i = 0; i < implementationClassNames.size(); i++) {
-            constructedObjects[i] = null;
-            startedToCreate[i] = false;
-            constructedClasses[i] = Class.forName(implementationClassNames.get(i));
+            constructedClasses[i + 1] = Class.forName(implementationClassNames.get(i));
         }
 
+        startedToCreate[0] = true;
         return makeObjectOfClass(resultClass);
     }
 
